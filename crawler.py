@@ -72,7 +72,7 @@ def run(playwright: Playwright,MCI_PHONE, MCI_PASSWORD) -> None:
         "xpath=/html/body/app-root/app-main/div/div/div/div/div[2]/app-my-package/"
         "mat-card/mat-card-content/mat-tab-group/div/mat-tab-body[1]/div/div/"
         "app-package-card/div/div[3]/div[2]"
-    )
+    ).first
 
     remaining_days.wait_for(state="visible")
 
