@@ -81,35 +81,54 @@ def run(playwright: Playwright,MCI_PHONE, MCI_PASSWORD) -> None:
     total = total_package.inner_text()
     current = current_package.inner_text()
     remaining_days_ = remaining_days.inner_text()
+    remain_text_ = remain_text.inner_text()
 
 
     context.close()
     browser.close()
 
-    return total, current, remaining_days_
+    return total, current, remaining_days_, remain_text_
 
 def my_mci_summary(MCI_PHONE,MCI_PASSWORD):
 
     data = {}
 
     with sync_playwright() as playwright:
-        summary = run(playwright,MCI_PHONE,MCI_PASSWORD)
+        summary = run(playwright, MCI_PHONE, MCI_PASSWORD)
+
         total_text = summary[0]
         current_text = summary[1]
-        days_text =  summary[2]
-        total_gb = float(re.search(r"[\d.]+", total_text).group())
-        current_gb = float(re.search(r"[\d.]+", current_text).group())
+        days_text = summary[2]
+        remain_text = summary[3]
+
+        total_value = float(re.search(r"[\d.]+", total_text).group())
+        current_value = float(re.search(r"[\d.]+", current_text).group())
         remaining_days_value = int(re.search(r"\d+", days_text).group())
-        used_gb = total_gb - current_gb
-        remaining_percent = (current_gb / total_gb) * 100
-        used_percent = (used_gb / total_gb) * 100
+
+        if "مگ" in remain_text:
+            # current_value is MB
+            current_mb = current_value
+            current_gb = current_mb / 1024
+
+        elif "گیگ" in remain_text:
+            # current_value is GB
+            current_gb = current_value
+            current_mb = current_gb * 1024
+
+        else:
+            raise ValueError(f"Unknown unit: {remain_text}")
+
+        used_gb = total_value - current_gb
+        remaining_percent = (current_gb / total_value) * 100
+
         data = {
-        "total_gb": total_gb,
-        "remaining_gb": current_gb,
-        "used_gb": round(used_gb, 2),
-        "remaining_days": remaining_days_value,
-        "remaining_percent": round(remaining_percent, 2)
-    }
+            "total_gb": round(total_value, 2),
+            "remaining_gb": round(current_gb, 2),
+            "remaining_mb": round(current_mb, 2),
+            "used_gb": round(used_gb, 2),
+            "remaining_days": remaining_days_value,
+            "remaining_percent": round(remaining_percent, 2),
+        }
     return data
 
 
